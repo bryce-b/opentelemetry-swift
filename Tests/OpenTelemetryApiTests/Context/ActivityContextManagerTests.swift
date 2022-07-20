@@ -5,6 +5,7 @@
 
 @testable import OpenTelemetryApi
 import XCTest
+import Network
 
 class ActivityContextManagerTests: XCTestCase {
     let defaultTracer = DefaultTracer.instance
@@ -21,6 +22,36 @@ class ActivityContextManagerTests: XCTestCase {
         XCTAssert(OpenTelemetry.instance.contextProvider.activeSpan === nil)
     }
 
+    func testContext() {
+        let obj1 = ActivityContextManager.instance
+        let contextValue = ActivityContextManager.instance.getCurrentContextValue(forKey: .span)
+
+        XCTAssertNil(contextValue)
+        
+        ActivityContextManager.instance.setCurrentContextValue(forKey: .span, value: obj1)
+        
+        let newContext = ActivityContextManager.instance.getCurrentContextValue(forKey: .span)
+        XCTAssertNotNil(newContext)
+    }
+    
+    func testTwoUniqueTraces() {
+        let span1 = defaultTracer.spanBuilder(spanName: "testTwoUniqueTraces1").startSpan()
+        ActivityContextManager.instance.setCurrentContextValue(forKey: .span, value: span1)
+        XCTAssert(ActivityContextManager.instance.getCurrentContextValue(forKey: .span) === span1)
+        DispatchQueue.global().async {
+            let span2 = self.createSpan(parentSpan: span1, name: "testTwoUniqueTraces2")
+            self.endSpanAndValidateContext(span: span2, parentSpan: span1)
+        }
+        XCTAssert(OpenTelemetry.instance.contextProvider.activeSpan === span1)
+        span1.end()
+        XCTAssert(OpenTelemetry.instance.contextProvider.activeSpan === nil)
+        
+        
+        let span3 = defaultTracer.spanBuilder(spanName: "testTwoUniqueTraces3").startSpan()
+        ActivityContextManager.instance.setCurrentContextValue(forKey: .span, value: span3)
+        self.endSpanAndValidateContext(span: span3, parentSpan: nil)
+    }
+    
     func testStartAndEndSpanInAsyncQueue() {
         let span1 = defaultTracer.spanBuilder(spanName: "testStartAndEndSpanInAsyncQueue1").startSpan()
         ActivityContextManager.instance.setCurrentContextValue(forKey: .span, value: span1)

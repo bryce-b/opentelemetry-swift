@@ -32,23 +32,27 @@ class ActivityContextManager: ContextManager {
     var contextMap = [os_activity_id_t: [String: AnyObject]]()
 
     func getCurrentContextValue(forKey key: OpenTelemetryContextKeys) -> AnyObject? {
+        rlock.lock()
+        defer {
+            rlock.unlock()
+        }
         var parentIdent: os_activity_id_t = 0
         let activityIdent = os_activity_get_identifier(OS_ACTIVITY_CURRENT, &parentIdent)
         var contextValue: AnyObject?
-        rlock.lock()
         guard let context = contextMap[activityIdent] ?? contextMap[parentIdent] else {
-            rlock.unlock()
             return nil
         }
         contextValue = context[key.rawValue]
-        rlock.unlock()
         return contextValue
     }
 
     func setCurrentContextValue(forKey key: OpenTelemetryContextKeys, value: AnyObject) {
+        rlock.lock()
+        defer {
+            rlock.unlock()
+        }
         var parentIdent: os_activity_id_t = 0
         var activityIdent = os_activity_get_identifier(OS_ACTIVITY_CURRENT, &parentIdent)
-        rlock.lock()
         if contextMap[activityIdent] == nil || contextMap[activityIdent]?[key.rawValue] != nil {
             var scope: os_activity_scope_state_s
             (activityIdent, scope) = createActivityContext()
@@ -69,6 +73,10 @@ class ActivityContextManager: ContextManager {
     }
 
     func removeContextValue(forKey key: OpenTelemetryContextKeys, value: AnyObject) {
+        rlock.lock()
+        defer {
+            rlock.unlock()
+        }
         if let scope = objectScope.object(forKey: value) {
             var scope = scope.scope
             os_activity_scope_leave(&scope)
