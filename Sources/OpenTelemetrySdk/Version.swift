@@ -6,6 +6,6 @@
 import Foundation
 
 extension Resource {
-  public static let OTEL_SWIFT_SDK_VERSION : String = "123.123.123"
+  public static let OTEL_SWIFT_SDK_VERSION : String = "1.2.3"
 }
 
