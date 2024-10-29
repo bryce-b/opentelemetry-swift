@@ -8,6 +8,8 @@ on:
 jobs:
   Check:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps: 
       - name: check branch name
         id: check-release
@@ -20,4 +22,4 @@ jobs:
         uses: mshick/add-pr-comment@v2
         with:
           message: |
-            ** WARNING ** : This PR will trigger a release and tag when merged.
+            **WARNING** : This PR will trigger a release and tag when merged.
