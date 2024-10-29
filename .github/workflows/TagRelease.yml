@@ -6,7 +6,7 @@ on :
     types:
       - closed
 jobs:
-  TagRelease:
+  CheckRelease:
     runs-on: ubuntu-latest
     steps:
       - name: Check if merge is release branch
@@ -16,8 +16,9 @@ jobs:
             echo "match=true" >> $GITHUB_OUTPUT
             echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
           fi
-      - name: Tag if release
+      - name: Tag if release branch
         if: github.event.pull_request.merged == true && steps.check-release.outputs.match == 'true'
+        run: exit 1
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: version bump to ${{ steps.check-release.outputs.version }}
