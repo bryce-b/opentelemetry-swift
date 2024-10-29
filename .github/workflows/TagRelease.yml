@@ -17,7 +17,7 @@ jobs:
             echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
           fi
       - name: Tag if release branch
-        if: github.event.pull_request.merged == true && steps.check-release.outputs.match == 'true'
+        if: github.event.pull_request.merged != true || steps.check-release.outputs.match != 'true'
         run: exit 1
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
